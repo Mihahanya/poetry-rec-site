@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Рекомендация поэзии</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab&display=swap" rel="stylesheet">
+
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+</head>
+
+<body>
+	<header>
+		<h2>Поиск поэзии</h2>
+	</header>
+
+	<div class="request-bar">
+		<p class="help">Опишите на что должен быть похож стих который вы хотите найти, можете указать желаемого автора, объем или эпоху.</p>
+		<textarea id="prompt" placeholder="Запрос..."></textarea>
+		<div class="formm">
+			<p> <strong>Приоритет поиска: </strong> <font style="font-style: italic; font-size: 15px;">образность
+				<input class="coef" id="priority" type="range" min="0" max="100" id="size" value="20"> характеристики </font>
+			</p>
+
+			<button id="search">Искать →</button>
+		</div>
+		<hr style="width: 100%; margin-top: 35px;">
+	</div>
+
+
+	<div id="result">
+		<h1 class="alert">Результаты поиска <br> появятся здесь...</h1>
+	</div>
+</body>
+
+<script>
+
+function html_poem_template(name, text, year, author) {
+	var res = `<h3 class="name">${name}</h3>
+		<div class="poem">
+			<p class="poem-text">
+				${text.replaceAll('\n', '<br>')}
+			</p>`
+
+	if (year > 0) res += `<p class="year">${year}</p>`
+
+	res += `<p class="author">${author}</p>
+		</div>
+		<hr>`
+	
+	return res
+}
+
+$('#search').on("click", function() {
+	var serverUrl = "https://9483-91-135-222-29.ngrok-free.app/poem_request";
+	//var serverUrl = "https://127.0.0.1:8080/poem_request";
+	$('#result').fadeOut('slow')
+
+	// todo enter or button
+	$.ajax({
+		type: "POST",
+		url: serverUrl,
+		contentType: "application/json",  
+		data: JSON.stringify({ 
+			request_text: $('#prompt').val(), 
+			top_n: 10, 
+			search_priority: $('#priority').val()/100
+		}),  
+		success: function(response) {
+			console.log(response)
+			var inner_text = ''
+			for (const poem_data of response) {
+				inner_text += html_poem_template(poem_data.name, poem_data.text, poem_data.date, poem_data.author)
+			}
+			$('#result').fadeIn('slow')
+			$('#result').html(inner_text)
+		},
+		error: function(error) {
+			$('#result').fadeIn('slow')
+			$('#result').html('<h1 class="alert">Кажется, сервер <br> сейчас недоступен...</h1>')
+		}
+	});
+});
+
+</script>
+
+<style>
+
+:root {
+	--light: #f3f3f3;
+	--dark: #323232;
+
+}
+
+* {
+	font-family: 'Roboto Slab', serif;
+}
+
+body {
+	/* padding-inline: 30%; */
+	margin: 0;
+
+	background: var(--light);
+	/* background: #f3e5dd; */
+	/* background: floralwhite; */
+}
+
+h2 {
+	text-align: center;
+	margin-block: 30px;
+}
+
+.coef {
+	margin: 0px 5px;
+    transform: translateY(3px);
+    -webkit-appearance: none;
+    border-radius: 104px;
+    background: #8d8f91;
+    box-shadow: 0 0 0px 4px #cdcdcd;
+}
+.coef::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #135992;
+  cursor: pointer;
+}
+
+.alert {
+	text-align: center; 
+	color: gray;
+}
+
+.help {
+	font-size: medium;
+	color: gray;
+	padding: 10px;
+}
+
+.formm {
+	display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.request-bar {
+	margin: auto;
+	width: 75vmin;
+}
+
+#prompt {
+	width: calc(100% - 28px);
+	max-width: calc(100% - 28px);
+	min-width: calc(100% - 28px);
+	height: 70px;
+
+    border-inline: 0;
+    border: 5px solid var(--dark);
+	border-radius: 20px;
+	box-shadow: 0px 8px 30px 0px #0000004d,
+				0px 0px 30px 0px #03a9f400;
+
+	background: var(--light);
+	
+	font-weight: bold;
+	font-size: 24px;
+
+	padding: 15px;
+
+	transition: 0.2s;
+}
+#prompt:hover {
+	box-shadow: 0px 5px 40px 0px #00000060,
+				0px 0px 40px 0px #03a9f420;	
+}
+#prompt:focus-visible {
+	outline: 0;
+	box-shadow: 0px 5px 40px 0px #00000060,
+				0px 0px 30px 0px #03a9f435;
+	border: 5px solid #012e53;
+}
+
+hr {
+	width: 100px;
+	margin-block: 50px;
+	border-color: #000;
+}
+
+#result {
+	margin-top: 50px;
+
+}
+
+.poem {
+	width: max-content;
+	margin-inline: auto;
+}
+
+.name {
+	max-width: 100%;
+	text-align: center;
+}
+
+.year {
+	font-size: 13px;
+	margin-bottom: 0px;
+}
+
+.author {
+	font-size: 13px;
+	margin-top: 0px;
+}
+
+#search {
+	margin-top: 20px;
+	padding: 10px 50px;
+	border: 0;
+	border-radius: 15px;
+	box-shadow: 0px 8px 30px 0px #0000004d,
+				0px 0px 30px 0px #03a9f400;
+	border: 4px solid var(--dark);
+
+	background: #525252;
+	color: var(--light);
+	
+	font-size: 18px;
+
+	transition: 0.2s;
+}
+#search:hover {
+	background: #4c6e89;
+	box-shadow: 0px 5px 40px 0px #00000060,
+				0px 0px 30px 0px #03a9f435;
+}
+#search:active {
+	transform: translate(0, 5%);
+}
+
+</style>
+
+</html>
