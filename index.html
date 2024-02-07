@@ -68,7 +68,7 @@ $('#search').on("click", function() {
 		data: JSON.stringify({ 
 			request_text: $('#prompt').val(), 
 			top_n: 10, 
-			search_priority: $('#priority').val()/100
+			search_priority: 1-$('#priority').val()/100
 		}),  
 		success: function(response) {
 			console.log(response)
